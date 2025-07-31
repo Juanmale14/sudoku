@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rosco de Vocabulario: Animales</title>
+    <style>
+        /* Estilos generales y fuentes */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+
+        :root {
+            --main-blue: #007bff;
+            --correct-green: #28a745;
+            --incorrect-red: #dc3545;
+            --neutral-gray: #f8f9fa;
+            --dark-gray: #343a40;
+            --letter-size: 40px; /* Tamaño de los círculos de las letras */
+            --rosco-size: 400px; /* Diámetro del rosco */
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #e9ecef;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        /* Contenedor principal del juego */
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            width: 100%;
+            max-width: 900px;
+        }
+
+        /* Estructura del layout: Rosco a la izquierda, Controles a la derecha */
+        .main-layout {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 40px;
+            width: 100%;
+        }
+
+        /* Contenedor del Rosco */
+        .rosco-container {
+            position: relative;
+            width: var(--rosco-size);
+            height: var(--rosco-size);
+            margin: 20px;
+        }
+
+        /* Círculos de las letras */
+        .letter-circle {
+            position: absolute;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: var(--letter-size);
+            height: var(--letter-size);
+            background-color: var(--main-blue);
+            color: white;
+            border-radius: 50%;
+            font-size: 1.2rem;
+            font-weight: 600;
+            border: 2px solid white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+
+        /* Estilos de estado para los círculos */
+        .letter-circle.active {
+            transform: scale(1.2);
+            box-shadow: 0 0 15px var(--main-blue);
+            z-index: 10;
+        }
+
+        .letter-circle.correct {
+            background-color: var(--correct-green);
+        }
+
+        .letter-circle.incorrect {
+            background-color: var(--incorrect-red);
+        }
+
+        /* Panel de control del juego */
+        .controls-panel {
+            flex: 1;
+            min-width: 300px;
+            max-width: 400px;
+            background-color: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: var(--dark-gray);
+            margin-bottom: 10px;
+        }
+
+        /* Temporizador */
+        #timer {
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--dark-gray);
+            background-color: var(--neutral-gray);
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        /* Cuadro de definición y feedback */
+        #definition-box {
+            background-color: var(--neutral-gray);
+            padding: 15px;
+            border-radius: 10px;
+            min-height: 80px;
+            text-align: center;
+            color: var(--dark-gray);
+            font-size: 1rem;
+        }
+        
+        #feedback {
+            color: var(--incorrect-red);
+            font-weight: 600;
+            min-height: 20px;
+            text-align: center;
+        }
+
+        /* Campo de entrada de texto */
+        #answer-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            font-size: 1rem;
+            box-sizing: border-box;
+            transition: border-color 0.3s;
+        }
+
+        #answer-input:focus {
+            outline: none;
+            border-color: var(--main-blue);
+        }
+        
+        #answer-input:disabled {
+            background-color: #e9ecef;
+            cursor: not-allowed;
+        }
+
+        /* Contenedor para los botones de acción */
+        .action-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        /* Estilo general de los botones */
+        .btn {
+            padding: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+            color: white;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+        }
+        
+        .btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        #check-btn { background-color: var(--correct-green); }
+        #pass-btn { background-color: #ffc107; color: var(--dark-gray); }
+        #start-btn { 
+            background-color: var(--main-blue);
+            width: 100%;
+            margin-top: 10px;
+        }
+        
+        /* Media Query para pantallas más pequeñas */
+        @media (max-width: 768px) {
+            .main-layout {
+                flex-direction: column;
+            }
+            :root {
+                --rosco-size: 320px;
+                --letter-size: 35px;
+            }
+            .controls-panel {
+                width: 90%;
+            }
+        }
+
+    </style>
+<style type="text/css">
+.grande { font-size: 60px; }
+</style>
+<script>
+// Escribir aqui el código Javascript
+</script>
+</head>
+<body>
+
+    <div class="game-container">
+        <h1>Rosco de Vocabulario: Animales</h1>
+        <div class="main-layout">
+            <div class="rosco-container" id="rosco-container">
+                <!-- Las letras se generarán aquí con JavaScript -->
+            <div class="letter-circle" id="letter-A" style="left: 200px; top: 0px;">A</div><div class="letter-circle" id="letter-B" style="left: 264.939894px; top: 10.836552px;">B</div><div class="letter-circle" id="letter-C" style="left: 322.842543px; top: 42.171898px;">C</div><div class="letter-circle" id="letter-D" style="left: 367.433296px; top: 90.610368px;">D</div><div class="letter-circle" id="letter-E" style="left: 393.880053px; top: 150.902903px;">E</div><div class="letter-circle" id="letter-F" style="left: 399.316899px; top: 216.515869px;">F</div><div class="letter-circle" id="letter-G" style="left: 383.154665px; top: 280.339085px;">G</div><div class="letter-circle" id="letter-H" style="left: 347.144782px; top: 335.456314px;">H</div><div class="letter-circle" id="letter-I" style="left: 295.189479px; top: 375.89475px;">I</div><div class="letter-circle" id="letter-J" style="left: 232.918918px; top: 397.272261px;">J</div><div class="letter-circle" id="letter-L" style="left: 167.081082px; top: 397.272261px;">L</div><div class="letter-circle" id="letter-M" style="left: 104.810521px; top: 375.89475px;">M</div><div class="letter-circle" id="letter-O" style="left: 52.855218px; top: 335.456314px;">O</div><div class="letter-circle" id="letter-P" style="left: 16.845335px; top: 280.339085px;">P</div><div class="letter-circle" id="letter-R" style="left: 0.683101px; top: 216.515869px;">R</div><div class="letter-circle" id="letter-S" style="left: 6.119947px; top: 150.902903px;">S</div><div class="letter-circle" id="letter-T" style="left: 32.566704px; top: 90.610368px;">T</div><div class="letter-circle" id="letter-W" style="left: 77.157457px; top: 42.171898px;">W</div><div class="letter-circle" id="letter-Z" style="left: 135.060106px; top: 10.836552px;">Z</div></div>
+            <div class="controls-panel">
+                <div id="timer">10:00</div>
+                <div id="definition-box">
+                    Haz clic en "Jugar" para comenzar.
+                </div>
+                <div id="feedback"></div>
+                <input type="text" id="answer-input" placeholder="Escribe tu respuesta en inglés..." disabled="">
+                <div class="action-buttons">
+                    <button id="check-btn" class="btn" disabled="">Comprobar</button>
+                    <button id="pass-btn" class="btn" disabled="">Pasapalabra</button>
+                </div>
+                <button id="start-btn" class="btn">Jugar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- ESTRUCTURA DE DATOS DEL JUEGO ---
+            const questions = [
+                { letter: "A", word: "Ant", definition: "Pequeño insecto social que vive en colonias.", status: 0 },
+                { letter: "B", word: "Bear", definition: "Gran mamífero omnívoro con pelaje denso.", status: 0 },
+                { letter: "C", word: "Cat", definition: "Animal doméstico felino, conocido por su agilidad.", status: 0 },
+                { letter: "D", word: "Dog", definition: "Mamífero carnívoro domesticado, el mejor amigo del hombre.", status: 0 },
+                { letter: "E", word: "Elephant", definition: "El mamífero terrestre más grande, con trompa y grandes orejas.", status: 0 },
+                { letter: "F", word: "Frog", definition: "Anfibio que salta y croa, vive cerca del agua.", status: 0 },
+                { letter: "G", word: "Giraffe", definition: "Mamífero africano de cuello muy largo.", status: 0 },
+                { letter: "H", word: "Horse", definition: "Animal domesticado, usado para montar y tirar de carros.", status: 0 },
+                { letter: "I", word: "Iguana", definition: "Reptil grande, principalmente herbívoro, que vive en zonas tropicales.", status: 0 },
+                { letter: "J", word: "Jellyfish", definition: "Animal marino gelatinoso con tentáculos urticantes.", status: 0 },
+                { letter: "L", word: "Lion", definition: "Gran felino conocido como el 'rey de la selva'.", status: 0 },
+                { letter: "M", word: "Monkey", definition: "Primate ágil que vive en los árboles.", status: 0 },
+                { letter: "O", word: "Owl", definition: "Ave rapaz nocturna con grandes ojos y que ulula.", status: 0 },
+                { letter: "P", word: "Penguin", definition: "Ave no voladora que vive en climas fríos del hemisferio sur.", status: 0 },
+                { letter: "R", word: "Rabbit", definition: "Pequeño mamífero de orejas largas y que se reproduce rápidamente.", status: 0 },
+                { letter: "S", word: "Snake", definition: "Reptil sin patas de cuerpo alargado.", status: 0 },
+                { letter: "T", word: "Tiger", definition: "El felino más grande, con un característico pelaje a rayas.", status: 0 },
+                { letter: "W", word: "Whale", definition: "El mamífero más grande del mundo, vive en el océano.", status: 0 },
+                { letter: "Z", word: "Zebra", definition: "Equino africano conocido por su pelaje de rayas blancas y negras.", status: 0 }
+                // Puedes añadir más palabras para completar el abecedario.
+            ];
+
+            // --- VARIABLES GLOBALES DEL JUEGO ---
+            let currentIndex = 0;
+            let timerInterval;
+            let timeLeft = 600; // 10 minutos en segundos
+            let gameActive = false;
+
+            // --- REFERENCIAS A ELEMENTOS DEL DOM ---
+            const roscoContainer = document.getElementById('rosco-container');
+            const timerEl = document.getElementById('timer');
+            const definitionBox = document.getElementById('definition-box');
+            const feedbackEl = document.getElementById('feedback');
+            const answerInput = document.getElementById('answer-input');
+            const checkBtn = document.getElementById('check-btn');
+            const passBtn = document.getElementById('pass-btn');
+            const startBtn = document.getElementById('start-btn');
+
+            // --- FUNCIONES DEL JUEGO ---
+
+            /**
+             * Inicializa el rosco, creando y posicionando los círculos de las letras.
+             */
+            function createRosco() {
+                const radius = roscoContainer.offsetWidth / 2 - (document.documentElement.style.getPropertyValue('--letter-size').replace('px', '') / 2);
+                const angleStep = (2 * Math.PI) / questions.length;
+
+                questions.forEach((q, i) => {
+                    const angle = i * angleStep - (Math.PI / 2); // Empezar en la parte superior (12 en punto)
+                    const x = radius + radius * Math.cos(angle);
+                    const y = radius + radius * Math.sin(angle);
+
+                    const letterDiv = document.createElement('div');
+                    letterDiv.classList.add('letter-circle');
+                    letterDiv.textContent = q.letter;
+                    letterDiv.id = `letter-${q.letter}`;
+                    letterDiv.style.left = `${x}px`;
+                    letterDiv.style.top = `${y}px`;
+                    roscoContainer.appendChild(letterDiv);
+                });
+            }
+
+            /**
+             * Inicia o reinicia el juego.
+             */
+            function startGame() {
+                // Reiniciar estado de las preguntas
+                questions.forEach(q => q.status = 0);
+                
+                // Reiniciar variables
+                currentIndex = 0;
+                timeLeft = 600;
+                gameActive = true;
+
+                // Reiniciar UI
+                document.querySelectorAll('.letter-circle').forEach(c => {
+                    c.classList.remove('correct', 'incorrect', 'active');
+                });
+                answerInput.value = '';
+                feedbackEl.textContent = '';
+                timerEl.textContent = formatTime(timeLeft);
+                startBtn.textContent = 'Reiniciar';
+                
+                // Habilitar controles
+                answerInput.disabled = false;
+                checkBtn.disabled = false;
+                passBtn.disabled = false;
+                answerInput.focus();
+
+                // Iniciar temporizador
+                clearInterval(timerInterval);
+                timerInterval = setInterval(updateTimer, 1000);
+                
+                displayQuestion();
+            }
+
+            /**
+             * Muestra la pregunta actual y actualiza la clase 'active' en el rosco.
+             */
+            function displayQuestion() {
+                // Quitar clase 'active' de la letra anterior
+                document.querySelectorAll('.letter-circle.active').forEach(el => el.classList.remove('active'));
+                
+                const currentQuestion = questions[currentIndex];
+                definitionBox.textContent = `Con la '${currentQuestion.letter}': ${currentQuestion.definition}`;
+                
+                // Añadir clase 'active' a la letra actual
+                document.getElementById(`letter-${currentQuestion.letter}`).classList.add('active');
+            }
+
+            /**
+             * Comprueba la respuesta del usuario.
+             */
+            function checkAnswer() {
+                if (!gameActive) return;
+
+                const userAnswer = answerInput.value.trim().toLowerCase();
+                const currentQuestion = questions[currentIndex];
+                const letterDiv = document.getElementById(`letter-${currentQuestion.letter}`);
+
+                if (userAnswer === currentQuestion.word.toLowerCase()) {
+                    currentQuestion.status = 1; // Correcta
+                    letterDiv.classList.add('correct');
+                    feedbackEl.textContent = '¡Correcto!';
+                } else {
+                    currentQuestion.status = -1; // Incorrecta
+                    letterDiv.classList.add('incorrect');
+                    feedbackEl.textContent = `Incorrecto. La respuesta era: ${currentQuestion.word}`;
+                }
+                
+                answerInput.value = '';
+                moveToNextQuestion();
+            }
+
+            /**
+             * Salta la pregunta actual (Pasapalabra).
+             */
+            function passWord() {
+                if (!gameActive) return;
+                feedbackEl.textContent = '';
+                answerInput.value = '';
+                moveToNextQuestion();
+            }
+            
+            /**
+             * Busca la siguiente pregunta sin responder.
+             */
+            function moveToNextQuestion() {
+                const initialIndex = currentIndex;
+                let attempts = 0;
+
+                do {
+                    currentIndex = (currentIndex + 1) % questions.length;
+                    attempts++;
+                // Busca una pregunta que no esté marcada como correcta (status != 1)
+                // y evita un bucle infinito si todas están respondidas
+                } while (questions[currentIndex].status === 1 && attempts <= questions.length);
+                
+                // Comprobar si el juego ha terminado
+                if (checkGameEnd()) {
+                    endGame(true); // Ganó
+                } else {
+                    setTimeout(() => {
+                        feedbackEl.textContent = '';
+                        displayQuestion();
+                    }, 1200); // Pequeña pausa para leer el feedback
+                }
+            }
+
+            /**
+             * Comprueba si todas las palabras han sido acertadas.
+             * @returns {boolean} - True si todas las palabras son correctas.
+             */
+            function checkGameEnd() {
+                return questions.every(q => q.status === 1);
+            }
+
+            /**
+             * Termina el juego, ya sea por tiempo o por completar el rosco.
+             * @param {boolean} hasWon - Indica si el jugador ha ganado.
+             */
+            function endGame(hasWon = false) {
+                gameActive = false;
+                clearInterval(timerInterval);
+                
+                answerInput.disabled = true;
+                checkBtn.disabled = true;
+                passBtn.disabled = true;
+                
+                if (hasWon) {
+                    definitionBox.textContent = '¡Felicidades! ¡Has completado el rosco!';
+                } else {
+                    definitionBox.textContent = '¡Se acabó el tiempo!';
+                }
+            }
+
+            /**
+             * Actualiza el temporizador cada segundo.
+             */
+            function updateTimer() {
+                timeLeft--;
+                timerEl.textContent = formatTime(timeLeft);
+                if (timeLeft <= 0) {
+                    endGame(false);
+                }
+            }
+
+            /**
+             * Formatea el tiempo de segundos a MM:SS.
+             * @param {number} seconds - El tiempo total en segundos.
+             * @returns {string} - El tiempo formateado.
+             */
+            function formatTime(seconds) {
+                const minutes = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+            }
+
+            // --- EVENT LISTENERS ---
+            startBtn.addEventListener('click', startGame);
+            checkBtn.addEventListener('click', checkAnswer);
+            passBtn.addEventListener('click', passWord);
+            answerInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault(); // Evita el comportamiento por defecto del formulario
+                    checkAnswer();
+                }
+            });
+
+            // --- INICIALIZACIÓN ---
+            createRosco();
+        });
+    </script>
+
+
+
+
+</body></html>
